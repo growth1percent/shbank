@@ -2,7 +2,7 @@ package com.example.shbank.mapper;
 
 import com.example.shbank.dto.account.AccountCreateRequest;
 import com.example.shbank.dto.account.AccountResponse;
-import com.example.shbank.dto.account.AccountSettingResponse;
+import com.example.shbank.dto.account.AccountSettingRequest;
 import com.example.shbank.entity.Account;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -23,12 +23,5 @@ public interface AccountMapper {
     @Mapping(source = "id", target = "accountId")
     @Mapping(source = "type", target = "accountType")
     AccountResponse toDto(Account account);
-
-    // 1회 이체한도 조회 엔티티 -> DTO 변환
-    @Mapping(source = "id", target = "accountId")
-    AccountSettingResponse toSettingDto(Account account);
-
-
-
 
 }

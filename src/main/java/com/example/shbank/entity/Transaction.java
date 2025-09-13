@@ -44,11 +44,9 @@ public class Transaction {
     @Column(nullable = false, updatable = false)
     private LocalDateTime transactionDate;
 
-    // --- 예약송금 ---
     @OneToOne(mappedBy = "transaction", cascade = CascadeType.ALL, optional = true)
     private ScheduledTransfer scheduledTransfer;
 
-    // --- 카드 결제 ---
     @OneToOne(mappedBy = "transaction", cascade = CascadeType.ALL, optional = true)
     private CardPayment cardPayment;
 }
