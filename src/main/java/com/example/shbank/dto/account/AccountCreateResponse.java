@@ -6,11 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-// 1회 이체 한도 조회 및 변경 응답
-public class AccountSettingResponse {
+// 계좌 개설 응답
+public class AccountCreateResponse {
     private Long accountId;
+    private String accountName;
+    private String accountNumber;
+    private String type;
+    private Integer balance;
     private Integer transferLimit;
 }
