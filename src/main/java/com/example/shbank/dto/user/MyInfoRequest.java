@@ -1,5 +1,7 @@
 package com.example.shbank.dto.user;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +11,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-// 내 정보 수정 응답
-public class MyInfoUpdateResponse {
+public class MyInfoRequest {
+    @NotBlank
     private String name;
+
+    @Email
+    @NotBlank
     private String email;
 }

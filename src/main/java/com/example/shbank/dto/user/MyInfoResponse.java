@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+// 내 정보 응답
 public class MyInfoResponse {
     private Long userId;
     private String name;
