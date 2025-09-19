@@ -14,7 +14,7 @@ public class AccountCreateResponse {
     private Long accountId;
     private String accountName;
     private String accountNumber;
-    private String type;
+    private String accountType;
     private Integer balance;
     private Integer transferLimit;
 }

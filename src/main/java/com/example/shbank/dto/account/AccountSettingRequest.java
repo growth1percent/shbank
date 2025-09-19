@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class AccountSettingRequest {
-    private String transferLimit;
+    private Integer transferLimit;
     private AuthPassword authPassword;
 
     private static class AuthPassword {

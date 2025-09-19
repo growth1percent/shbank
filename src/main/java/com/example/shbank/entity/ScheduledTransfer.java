@@ -23,6 +23,6 @@ public class ScheduledTransfer {
     @JoinColumn(name = "id")
     private Transaction transaction;
 
-    private LocalDateTime scheduledDate;
+    private LocalDateTime scheduleDate;
     private String memo;
 }

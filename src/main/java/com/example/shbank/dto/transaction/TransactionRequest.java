@@ -19,13 +19,10 @@ import java.time.LocalDateTime;
 @Builder
 // 거래 요청 (이체, 카드 결제)
 public class TransactionRequest {
-    @NotNull
-    private Long accountId;
-
     @NotBlank
     private String recipientAccountNumber;
 
-    @NotBlank
+    @NotNull
     private Integer amount;
 
     @NotNull
