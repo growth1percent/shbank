@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+// 로그인 요청 (토큰 발급)
 public class LoginRequest {
     @Email
     @NotBlank

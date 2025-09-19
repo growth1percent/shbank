@@ -1,4 +1,4 @@
-package com.example.shbank.dto.auth;
+package com.example.shbank.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+// 회원가입 요청
 public class SignUpRequest {
     @NotBlank
     private String name;

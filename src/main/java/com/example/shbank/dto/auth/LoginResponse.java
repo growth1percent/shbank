@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+// 로그인 응답
 public class LoginResponse {
     private String accessToken;
     private int accessTokenExpiresIn;
