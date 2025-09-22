@@ -1,7 +1,6 @@
 package com.example.shbank.entity;
 
 import com.example.shbank.common.BaseEntity;
-import com.example.shbank.dto.account.AccountCreateRequest;
 import com.example.shbank.enums.AccountStatus;
 import com.example.shbank.enums.AccountType;
 import jakarta.persistence.*;
@@ -46,19 +45,6 @@ public class Account extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountType type;
-
-    public static Account createAccount(AccountCreateRequest dto, User user, String encodedPassword) {
-        return Account.builder()
-                .type(dto.getAccountType())
-                .balance(dto.getInitialAmount())
-                .status(AccountStatus.ACTIVE)
-                .user(user)
-                .accountName(dto.getAccountName())
-                .accountNumber("temp") // 임시값 (DB에서 할당된 ID를 기반으로 계좌 번호 생성)
-                .transferLimit(dto.getTransferLimit())
-                .authPassword(encodedPassword)
-                .build();
-    }
 
     public Account assignAccountNumberFromId() {
         if (!"temp".equals(this.accountNumber)) {

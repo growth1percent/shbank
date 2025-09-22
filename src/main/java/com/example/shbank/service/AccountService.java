@@ -5,8 +5,10 @@ import com.example.shbank.dto.account.AccountResponse;
 import com.example.shbank.dto.account.AccountSettingRequest;
 import com.example.shbank.entity.Account;
 import com.example.shbank.entity.User;
+import com.example.shbank.enums.AccountStatus;
 import com.example.shbank.mapper.AccountMapper;
 import com.example.shbank.repository.AccountRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,14 +23,27 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final PasswordEncoder passwordEncoder;
+    private final EntityManager entityManager;
 
     // 계좌 개설 (POST)
     @Transactional
-    public AccountResponse createAccount(AccountCreateRequest request, User loggedInUser) {
+    public AccountResponse createAccount(AccountCreateRequest request, Long userId) {
         // authPassword 암호화
         String encodedPassword = passwordEncoder.encode(request.getAuthPassword());
 
-        Account account = Account.createAccount(request, loggedInUser, encodedPassword);
+        User userProxy = entityManager.getReference(User.class, userId);
+
+        Account account = Account.builder()
+                .type(request.getAccountType())
+                .balance(request.getInitialAmount())
+                .status(AccountStatus.ACTIVE)
+                .user(userProxy) // FK만 연결
+                .accountName(request.getAccountName())
+                .accountNumber("temp") // 임시값
+                .transferLimit(request.getTransferLimit())
+                .authPassword(encodedPassword)
+                .build();
+
         account = accountRepository.saveAndFlush(account);
         account = account.assignAccountNumberFromId();
         account = accountRepository.save(account);

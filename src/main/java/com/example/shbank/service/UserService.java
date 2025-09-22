@@ -1,6 +1,6 @@
 package com.example.shbank.service;
 
-import com.example.shbank.dto.user.MyInfoRequest;
+import com.example.shbank.dto.user.MyInfoUpdateRequest;
 import com.example.shbank.dto.user.MyInfoResponse;
 import com.example.shbank.dto.user.MyInfoUpdateResponse;
 import com.example.shbank.entity.User;
@@ -27,7 +27,7 @@ public class UserService {
 
     // 내 정보 수정 (PATCH)
     @Transactional
-    public MyInfoUpdateResponse updateMyInfo(Long userId, MyInfoRequest request) {
+    public MyInfoUpdateResponse updateMyInfo(Long userId, MyInfoUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
