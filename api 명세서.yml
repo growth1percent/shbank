@@ -75,7 +75,7 @@ tags:
   - name: Transactions
     description: 거래 조회/이체/결제
 paths:
-  /auth/signup:
+  /auth/register:
     post:
       tags:
         - Auth
@@ -236,6 +236,23 @@ paths:
                   message:
                     type: string
                     example: "리프레시 토큰이 만료되었거나 유효하지 않습니다."
+  /auth/logout/{userId}:
+    post:
+      summary: 로그아웃
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: 로그아웃할 사용자 ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: 로그아웃 성공 (No Content)
+      tags:
+        - Auth
+        
   /users/me:
     get:
       summary: 내 정보 조회

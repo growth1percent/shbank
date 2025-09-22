@@ -1,5 +1,6 @@
 package com.example.shbank.dto.user;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -11,13 +12,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MyInfoRequest {
-    private String name;
-
+public class MyInfoUpdateRequest {
     @Email
-    @NotBlank
     private String email;
 
+    @Valid
     private Password password;
 
     @Data

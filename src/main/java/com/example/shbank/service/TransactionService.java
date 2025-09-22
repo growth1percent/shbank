@@ -101,17 +101,19 @@ public class TransactionService {
     // 이체 (즉시/예약 송금) (POST)
     @Transactional
     public TransactionResponse transfer(Long senderAccountId,
-                                        Long recipientAccountId,
+                                        String recipientAccountNumber,
                                         Integer amount,
                                         LocalDateTime scheduleDate, // 예약 송금일, null이면 즉시 송금
                                         String memo,
-                                        TransactionType type) {
+                                        TransactionType type,
+                                        Long userId) {
 
         // 계좌 조회 및 검증
-        Account sender = accountRepository.findById(senderAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("송금 계좌 없음"));
-        Account recipient = accountRepository.findById(recipientAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("수취 계좌 없음"));
+        Account sender = accountRepository.findByIdAndUserId(senderAccountId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("송금 계좌가 존재하지 않거나 권한이 없습니다."));
+
+        Account recipient = accountRepository.findByAccountNumber(recipientAccountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("수취 계좌가 존재하지 않습니다."));
 
         // 잔액 체크
         if (sender.getBalance() < amount) {

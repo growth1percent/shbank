@@ -1,9 +1,6 @@
 package com.example.shbank.service;
 
-import com.example.shbank.dto.auth.AccessTokenRequest;
-import com.example.shbank.dto.auth.AccessTokenResponse;
-import com.example.shbank.dto.auth.LoginRequest;
-import com.example.shbank.dto.auth.LoginResponse;
+import com.example.shbank.dto.auth.*;
 import com.example.shbank.entity.User;
 import com.example.shbank.repository.UserRepository;
 import com.example.shbank.util.JWTUtil;
@@ -22,6 +19,29 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
+
+    // 회원가입
+    public RegisterResponse register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+        }
+
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(encodedPassword)
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        return RegisterResponse.builder()
+                .userId(savedUser.getId())
+                .name(savedUser.getName())
+                .email(savedUser.getEmail())
+                .build();
+    }
 
     // 로그인
     public LoginResponse login(LoginRequest request) {
