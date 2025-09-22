@@ -2,7 +2,6 @@ package com.example.shbank.mapper;
 
 import com.example.shbank.dto.account.AccountCreateRequest;
 import com.example.shbank.dto.account.AccountResponse;
-import com.example.shbank.dto.account.AccountSettingRequest;
 import com.example.shbank.entity.Account;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

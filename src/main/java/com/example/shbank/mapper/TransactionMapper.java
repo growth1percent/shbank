@@ -1,15 +1,13 @@
 package com.example.shbank.mapper;
 
-import com.example.shbank.dto.transaction.TransactionHistoryResponse;
+import com.example.shbank.dto.transaction.ScheduledTransferResponse;
 import com.example.shbank.dto.transaction.TransactionResponse;
 import com.example.shbank.dto.transaction.TransactionRequest;
-import com.example.shbank.entity.Account;
+import com.example.shbank.entity.ScheduledTransfer;
 import com.example.shbank.entity.Transaction;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -27,6 +25,12 @@ public interface TransactionMapper {
     @Mapping(source = "recipientAccount.accountNumber", target = "recipientAccount")
     TransactionResponse toResponse(Transaction entity);
 
-    // 거래 내역 응답 엔티티 -> DTO 변환
-    List<TransactionResponse> toResponseList(List<Transaction> transactions);
+    // 예약 송금 응답 엔티티 -> DTO 변환
+    @Mapping(source = "transaction.id", target = "transferId")
+    @Mapping(source = "transaction.senderAccount.id", target = "accountId")
+    @Mapping(source = "transaction.recipientAccount.accountName", target = "recipientName")
+    @Mapping(source = "transaction.amount", target = "amount")
+    @Mapping(source = "scheduleDate", target = "scheduleDate")
+    @Mapping(source = "memo", target = "memo")
+    ScheduledTransferResponse toScheduledTransferResponse(ScheduledTransfer scheduledTransfer);
 }

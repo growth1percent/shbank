@@ -49,6 +49,16 @@ public class Transaction {
 
     @OneToOne(mappedBy = "transaction", cascade = CascadeType.ALL, optional = true)
     private CardPayment cardPayment;
+
+    public void cancelScheduled() {
+        this.status = TransactionStatus.CANCELED;
+    }
+
+    public void linkCardPayment(CardPayment cardPayment) {
+        if (this.cardPayment == null) {
+            this.cardPayment = cardPayment;
+        }
+    }
 }
 
 

@@ -15,7 +15,6 @@ public class LoginResponse {
     private int accessTokenExpiresIn;
     private String refreshToken;
     private int refreshTokenExpiresIn;
-    private Boolean success;
     private Long userId;
     private String userName;
     private String email;

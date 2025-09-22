@@ -12,10 +12,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class MyInfoRequest {
-    @NotBlank
     private String name;
 
     @Email
     @NotBlank
     private String email;
+
+    private Password password;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class Password {
+        @NotBlank
+        private String current;
+
+        @NotBlank
+        private String newPassword;
+    }
 }

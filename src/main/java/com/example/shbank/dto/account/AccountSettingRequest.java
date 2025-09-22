@@ -14,7 +14,11 @@ public class AccountSettingRequest {
     private Integer transferLimit;
     private AuthPassword authPassword;
 
-    private static class AuthPassword {
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class AuthPassword {
         @Pattern(regexp = "\\d{6}", message = "6자리 숫자여야 합니다.")
         private String current;
         @Pattern(regexp = "\\d{6}", message = "6자리 숫자여야 합니다.")
