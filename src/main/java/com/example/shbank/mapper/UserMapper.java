@@ -2,7 +2,6 @@ package com.example.shbank.mapper;
 
 import com.example.shbank.dto.user.MyInfoResponse;
 import com.example.shbank.dto.user.MyInfoUpdateResponse;
-import com.example.shbank.dto.user.SignUpRequest;
 import com.example.shbank.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

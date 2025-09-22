@@ -1,6 +1,7 @@
 package com.example.shbank.entity;
 
 import com.example.shbank.common.BaseEntity;
+import com.example.shbank.dto.account.AccountCreateRequest;
 import com.example.shbank.enums.AccountStatus;
 import com.example.shbank.enums.AccountType;
 import jakarta.persistence.*;
@@ -45,4 +46,49 @@ public class Account extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountType type;
+
+    public static Account createAccount(AccountCreateRequest dto, User user, String encodedPassword) {
+        return Account.builder()
+                .type(dto.getAccountType())
+                .balance(dto.getInitialAmount())
+                .status(AccountStatus.ACTIVE)
+                .user(user)
+                .accountName(dto.getAccountName())
+                .accountNumber("temp") // 임시값 (DB에서 할당된 ID를 기반으로 계좌 번호 생성)
+                .transferLimit(dto.getTransferLimit())
+                .authPassword(encodedPassword)
+                .build();
+    }
+
+    public Account assignAccountNumberFromId() {
+        if (!"temp".equals(this.accountNumber)) {
+            throw new IllegalStateException("이미 계좌번호가 설정되었습니다.");
+        }
+
+        // ID 기반으로 고유한 계좌 번호 생성
+        long idValue = this.id;
+
+        int middle = (int) ((idValue / 1000000) % 1000);
+        int last = (int) (idValue % 1000000);
+
+        this.accountNumber = String.format("1234-%03d-%06d", middle, last);
+        return this;
+    }
+
+    public void updateTransferLimit(Integer transferLimit) {
+        this.transferLimit = transferLimit;
+    }
+
+    public void updateAuthPassword(String authPassword) {
+        this.authPassword = authPassword;
+    }
+
+    public void deposit(Integer amount) {
+        this.balance += amount;
+    }
+
+    public void withdraw(Integer amount) {
+        if (this.balance < amount) throw new IllegalStateException("잔액 부족");
+        this.balance -= amount;
+    }
 }
