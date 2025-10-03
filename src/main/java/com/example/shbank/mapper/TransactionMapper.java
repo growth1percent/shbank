@@ -12,11 +12,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface TransactionMapper {
-    // 거래 요청 DTO -> 엔티티 변환
-    @Mapping(target = "scheduledTransfer", ignore = true)
-    @Mapping(target = "cardPayment", ignore = true)
-    Transaction toEntity(TransactionRequest dto);
-
     // 거래 응답 엔티티 -> DTO 변환
     @Mapping(source = "id", target = "transactionId")
     @Mapping(source = "senderAccount.accountName", target = "senderName")

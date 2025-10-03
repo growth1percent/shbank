@@ -1,10 +1,13 @@
 package com.example.shbank.controller;
 
 import com.example.shbank.dto.auth.*;
+import com.example.shbank.security.CustomUserDetails;
 import com.example.shbank.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,7 +20,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@RequestBody @Valid RegisterRequest request) {
         RegisterResponse response = authService.register(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // 로그인
@@ -35,10 +38,14 @@ public class AuthController {
     }
 
     // 로그아웃
-    @PostMapping("/logout/{userId}")
-    public ResponseEntity<Void> logout(@PathVariable Long userId) {
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        Long userId = ((CustomUserDetails) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getUserId();
         authService.logout(userId);
         return ResponseEntity.noContent().build();
     }
-
 }

@@ -77,4 +77,9 @@ public class JWTUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    public String getEmailFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.get("email", String.class);
+    }
 }

@@ -9,10 +9,13 @@ import com.example.shbank.entity.ScheduledTransfer;
 import com.example.shbank.entity.Transaction;
 import com.example.shbank.enums.TransactionStatus;
 import com.example.shbank.enums.TransactionType;
+import com.example.shbank.exception.account.AccountNotFoundException;
+import com.example.shbank.exception.transaction.InsufficientBalanceException;
 import com.example.shbank.mapper.TransactionMapper;
 import com.example.shbank.repository.AccountRepository;
 import com.example.shbank.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,26 +36,31 @@ public class TransactionService {
                                                      TransactionType type,
                                                      LocalDateTime start,
                                                      LocalDateTime end) {
-        Account account = accountRepository.findByIdAndUserId(accountId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 계좌가 존재하지 않거나 권한이 없습니다."));
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("해당 계좌가 존재하지 않습니다."));
 
+        if (!account.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("해당 계좌에 접근할 권한이 없습니다.");
+        }
         List<Transaction> transactions;
 
         boolean hasDate = start != null && end != null;
 
         if (type == null) { // 전체 거래
             if (hasDate) {
-                transactions = transactionRepository.findByAccountIdAndTransactionDateBetween(
-                        account.getId(), start, end);
+                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_IdAndTransactionDateBetween(
+                        account.getId(), account.getId(), start, end);
             } else {
-                transactions = transactionRepository.findByAccountId(account.getId());
+                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_Id(
+                        account.getId(), account.getId());
             }
         } else { // 특정 거래 유형 (TRANSFER_IN, TRANSFER_OUT)
             if (hasDate) {
-                transactions = transactionRepository.findByAccountIdAndTypeAndTransactionDateBetween(
-                        account.getId(), type, start, end);
+                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_IdAndTypeAndTransactionDateBetween(
+                        account.getId(), account.getId(), type, start, end);
             } else {
-                transactions = transactionRepository.findByAccountIdAndType(account.getId(), type);
+                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_IdAndType(
+                        account.getId(), account.getId(), type);
             }
         }
 
@@ -84,9 +92,12 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public List<ScheduledTransferResponse> getScheduledTransfers(Long accountId, Long userId) {
         // 계좌 검증
-        Account account = accountRepository.findByIdAndUserId(accountId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 계좌가 존재하지 않거나 권한이 없습니다."));
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("해당 계좌가 존재하지 않습니다."));
 
+        if (!account.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("해당 계좌에 접근할 권한이 없습니다.");
+        }
         // status = SCHEDULED 인 Transaction 조회
         List<Transaction> scheduledTransactions =
                 transactionRepository.findBySenderAccount_IdAndStatus(account.getId(), TransactionStatus.SCHEDULED);
@@ -109,15 +120,19 @@ public class TransactionService {
                                         Long userId) {
 
         // 계좌 조회 및 검증
-        Account sender = accountRepository.findByIdAndUserId(senderAccountId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("송금 계좌가 존재하지 않거나 권한이 없습니다."));
+        Account sender = accountRepository.findById(senderAccountId)
+                .orElseThrow(() -> new AccountNotFoundException("송금 계좌가 존재하지 않습니다."));
+
+        if (!sender.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("해당 계좌에 접근할 권한이 없습니다.");
+        }
 
         Account recipient = accountRepository.findByAccountNumber(recipientAccountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("수취 계좌가 존재하지 않습니다."));
+                .orElseThrow(() -> new AccountNotFoundException("수취 계좌가 존재하지 않습니다."));
 
         // 잔액 체크
         if (sender.getBalance() < amount) {
-            throw new IllegalArgumentException("잔액 부족");
+            throw new InsufficientBalanceException("잔액이 부족합니다.");
         }
 
         // ScheduledTransfer 생성 (예약 송금일이 있는 경우)
@@ -166,11 +181,11 @@ public class TransactionService {
     @Transactional
     public void cancelScheduledTransfer(Long transactionId, Long userId) {
         Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 거래가 존재하지 않습니다."));
+                .orElseThrow(() -> new AccountNotFoundException("해당 거래가 존재하지 않습니다."));
 
         Account senderAccount = transaction.getSenderAccount();
         if (!senderAccount.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("취소 권한이 없습니다.");
+            throw new AccessDeniedException("취소 권한이 없습니다.");
         }
 
         if (transaction.getStatus() != TransactionStatus.SCHEDULED) {
@@ -186,10 +201,10 @@ public class TransactionService {
                                            Integer amount,
                                            String merchantName) {
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("결제 계좌가 존재하지 않습니다."));
+                .orElseThrow(() -> new AccountNotFoundException("결제 계좌가 존재하지 않습니다."));
 
         if (account.getBalance() < amount) {
-            throw new IllegalArgumentException("잔액 부족");
+            throw new InsufficientBalanceException("잔액이 부족합니다.");
         }
 
         Transaction transaction = Transaction.builder()

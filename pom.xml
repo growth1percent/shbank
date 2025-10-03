@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.5.5</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>shbank</artifactId>
@@ -71,7 +71,6 @@
 			<artifactId>lombok</artifactId>
 			<version>1.18.38</version>
 			<optional>true</optional>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -105,34 +104,22 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>1.19.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>mysql</artifactId>
+			<version>1.19.1</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -141,6 +128,11 @@
 					<source>17</source> <!-- 사용 중인 Java 버전 -->
 					<target>17</target>
 					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>1.18.38</version>
+						</path>
 						<path>
 							<groupId>org.mapstruct</groupId>
 							<artifactId>mapstruct-processor</artifactId>
