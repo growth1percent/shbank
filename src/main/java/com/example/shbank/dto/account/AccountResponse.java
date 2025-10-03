@@ -16,4 +16,5 @@ public class AccountResponse {
     private String accountNumber;
     private Integer balance;
     private String accountType;
+    private Integer transferLimit;
 }

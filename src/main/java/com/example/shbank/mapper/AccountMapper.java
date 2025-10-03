@@ -1,6 +1,7 @@
 package com.example.shbank.mapper;
 
 import com.example.shbank.dto.account.AccountCreateRequest;
+import com.example.shbank.dto.account.AccountCreateResponse;
 import com.example.shbank.dto.account.AccountResponse;
 import com.example.shbank.entity.Account;
 import org.mapstruct.Mapper;
@@ -8,6 +9,9 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AccountMapper {
+    // 계좌 개설 엔티티 -> DTO 변환
+    AccountCreateResponse toCreateDto(Account account);
+
     // 계좌 개설 DTO → 엔티티 변환
     @Mapping(target = "id", ignore = true) // PK는 DB가 생성
     @Mapping(target = "accountNumber", ignore = true) // 계좌번호는 서비스에서 생성
