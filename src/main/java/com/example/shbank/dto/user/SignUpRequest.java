@@ -2,6 +2,7 @@ package com.example.shbank.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserSignUpRequest {
+// 회원가입 요청
+public class SignUpRequest {
     @NotBlank
     private String name;
 
@@ -20,5 +22,6 @@ public class UserSignUpRequest {
     private String email;
 
     @NotBlank
+    @Pattern(regexp = "\\d{6}", message = "6자리 숫자여야 합니다.")
     private String password;
 }

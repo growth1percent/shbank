@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserLoginResponse {
-    private String accessToken;
-    private String refreshToken;
-    private Boolean success;
-    private Long userId;
-    private String userName;
+// 내 정보 수정 응답
+public class MyInfoUpdateResponse {
+    private String name;
+    private String email;
 }
