@@ -7,10 +7,10 @@ import com.example.shbank.exception.auth.UnauthorizedException;
 import com.example.shbank.repository.UserRepository;
 import com.example.shbank.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +21,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
-    private final RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     // 회원가입
     public RegisterResponse register(RegisterRequest request) {

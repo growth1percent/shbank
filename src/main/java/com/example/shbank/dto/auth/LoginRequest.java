@@ -18,8 +18,6 @@ public class LoginRequest {
     @NotBlank
     private String email;
 
-
     @NotBlank
-    @Pattern(regexp = "\\d{6}", message = "6자리 숫자여야 합니다.")
     private String password;
 }
