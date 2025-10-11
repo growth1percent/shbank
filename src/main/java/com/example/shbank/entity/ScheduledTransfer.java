@@ -16,13 +16,17 @@ import java.time.LocalDateTime;
 @Builder
 public class ScheduledTransfer {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id", nullable = false, unique = true)
     private Transaction transaction;
 
     private LocalDateTime scheduleDate;
     private String memo;
+
+    public void linkTransaction(Transaction transaction) {
+        this.transaction = transaction;
+    }
 }

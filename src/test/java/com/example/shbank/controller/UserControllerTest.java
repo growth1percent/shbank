@@ -13,15 +13,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -30,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
@@ -51,10 +49,6 @@ class UserControllerTest {
         userDetails = new CustomUserDetails(
                 new com.example.shbank.entity.User(1L, "test@example.com", "홍길동", "password")
         );
-
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     @Test
@@ -62,7 +56,9 @@ class UserControllerTest {
         MyInfoResponse response = new MyInfoResponse(1L, "홍길동", "test@example.com");
         Mockito.when(userService.getMyInfo(userDetails.getUserId())).thenReturn(response);
 
-        mockMvc.perform(get("/api/users/me"))
+        mockMvc.perform(get("/api/users/me")
+                .with(csrf())
+                .principal(new UsernamePasswordAuthenticationToken(userDetails, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(1L))
                 .andExpect(jsonPath("$.name").value("홍길동"))
@@ -74,7 +70,9 @@ class UserControllerTest {
         Mockito.when(userService.getMyInfo(userDetails.getUserId()))
                 .thenThrow(new UnauthorizedException("사용자를 찾을 수 없습니다."));
 
-        mockMvc.perform(get("/api/users/me"))
+        mockMvc.perform(get("/api/users/me")
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -90,6 +88,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/users/me")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -108,6 +107,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/users/me")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -126,6 +126,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/users/me")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());

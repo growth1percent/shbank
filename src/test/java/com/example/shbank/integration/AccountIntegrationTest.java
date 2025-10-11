@@ -15,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -25,7 +24,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                "spring.redis.host=localhost",
+                "spring.redis.port=6379"
+        }
+)
 @Testcontainers
 class AccountIntegrationTest {
 
@@ -73,7 +78,7 @@ class AccountIntegrationTest {
         User testUser = User.builder()
                 .email("test@example.com")
                 .name("홍길동")
-                .password("password")
+                .password(passwordEncoder.encode("password"))
                 .build();
 
         savedUser = userRepository.save(testUser);

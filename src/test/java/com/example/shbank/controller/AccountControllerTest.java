@@ -13,12 +13,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AccountController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AccountControllerTest {
 
     @Autowired
@@ -51,10 +52,6 @@ class AccountControllerTest {
         userDetails = new CustomUserDetails(
                 new com.example.shbank.entity.User(1L, "test@example.com", "홍길동", "password")
         );
-
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     @Test
@@ -81,6 +78,7 @@ class AccountControllerTest {
 
         mockMvc.perform(post("/api/accounts")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -107,10 +105,11 @@ class AccountControllerTest {
 
         mockMvc.perform(post("/api/accounts")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("해당 계좌가 존재하지 않습니다."));
+                .andExpect(jsonPath("$.message").value("해당 계좌가 존재하지 않습니다."));
     }
 
     @Test
@@ -122,7 +121,8 @@ class AccountControllerTest {
         Mockito.when(accountService.getAccountByUser(eq(userDetails.getUserId())))
                 .thenReturn(accounts);
 
-        mockMvc.perform(get("/api/accounts"))
+        mockMvc.perform(get("/api/accounts")
+                .principal(new UsernamePasswordAuthenticationToken(userDetails, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].accountId").value(accounts.get(0).getAccountId()))
                 .andExpect(jsonPath("$[0].accountName").value(accounts.get(0).getAccountName()))
@@ -169,6 +169,7 @@ class AccountControllerTest {
 
         mockMvc.perform(patch("/api/accounts/1/settings")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -188,10 +189,11 @@ class AccountControllerTest {
 
         mockMvc.perform(patch("/api/accounts/1/settings")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("해당 계좌가 존재하지 않습니다."));
+                .andExpect(jsonPath("$.message").value("해당 계좌가 존재하지 않습니다."));
     }
 
     @Test
@@ -205,10 +207,11 @@ class AccountControllerTest {
 
         mockMvc.perform(patch("/api/accounts/1/settings")
                         .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("해당 계좌에 접근할 권한이 없습니다."));
+                .andExpect(jsonPath("$.message").value("해당 계좌에 접근할 권한이 없습니다."));
     }
 
     @Test
@@ -216,7 +219,8 @@ class AccountControllerTest {
         Mockito.when(accountService.getTransferLimit(eq(1L), eq(userDetails.getUserId())))
                 .thenReturn(5000);
 
-        mockMvc.perform(get("/api/accounts/1/settings"))
+        mockMvc.perform(get("/api/accounts/1/settings")
+                .principal(new UsernamePasswordAuthenticationToken(userDetails, null)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("5000"));
     }
@@ -226,9 +230,10 @@ class AccountControllerTest {
         Mockito.when(accountService.getTransferLimit(eq(1L), eq(userDetails.getUserId())))
                 .thenThrow(new AccountNotFoundException("해당 계좌가 존재하지 않습니다."));
 
-        mockMvc.perform(get("/api/accounts/1/settings"))
+        mockMvc.perform(get("/api/accounts/1/settings")
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("해당 계좌가 존재하지 않습니다."));
+                .andExpect(jsonPath("$.message").value("해당 계좌가 존재하지 않습니다."));
     }
 
     @Test
@@ -236,9 +241,10 @@ class AccountControllerTest {
         Mockito.when(accountService.getTransferLimit(eq(1L), eq(userDetails.getUserId())))
                 .thenThrow(new AccessDeniedException("해당 계좌에 접근할 권한이 없습니다."));
 
-        mockMvc.perform(get("/api/accounts/1/settings"))
+        mockMvc.perform(get("/api/accounts/1/settings")
+                        .principal(new UsernamePasswordAuthenticationToken(userDetails, null)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("해당 계좌에 접근할 권한이 없습니다."));
+                .andExpect(jsonPath("$.message").value("해당 계좌에 접근할 권한이 없습니다."));
     }
 
     @Test
@@ -272,7 +278,7 @@ class AccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("해당 계좌가 존재하지 않습니다."));
+                .andExpect(jsonPath("$.message").value("해당 계좌가 존재하지 않습니다."));
     }
 
     @Test
@@ -289,6 +295,6 @@ class AccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("비밀번호가 일치하지 않습니다."));
+                .andExpect(jsonPath("$.message").value("비밀번호가 일치하지 않습니다."));
     }
 }

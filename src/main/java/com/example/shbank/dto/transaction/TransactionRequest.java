@@ -2,6 +2,7 @@ package com.example.shbank.dto.transaction;
 
 import com.example.shbank.enums.TransactionType;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -18,10 +19,14 @@ import java.time.LocalDateTime;
 @Builder
 // 거래 요청 (이체, 카드 결제)
 public class TransactionRequest {
+    @NotNull
+    private Long senderAccountId;
+
     @NotBlank
     private String recipientAccountNumber;
 
     @NotNull
+    @Min(1)
     private Integer amount;
 
     @NotNull

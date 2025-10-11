@@ -12,10 +12,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class ScheduledTransferResponse {
-    private Long accountId;       // 계좌 ID
-    private Long transferId;      // Transaction ID
-    private String recipientName; // 수취인 이름
-    private int amount;           // 금액
-    private LocalDateTime scheduleDate; // 예약 송금일
-    private String memo;          // 메모
+    private Long accountId;
+    private Long transferId;
+    private String recipientName;
+    private int amount;
+    private int balance;
+    private String type;
+    private LocalDateTime scheduleDate;
+    private String memo;
 }

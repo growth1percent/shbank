@@ -14,12 +14,16 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CardPayment {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id", nullable = false, unique = true)
     private Transaction transaction;
 
     private String merchantName;
+
+    public void linkTransaction(Transaction transaction) {
+        this.transaction = transaction;
+    }
 }

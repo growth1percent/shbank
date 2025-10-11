@@ -1,5 +1,6 @@
 package com.example.shbank.service;
 
+import com.example.shbank.dto.transaction.CardPaymentResponse;
 import com.example.shbank.dto.transaction.ScheduledTransferResponse;
 import com.example.shbank.dto.transaction.TransactionHistoryResponse;
 import com.example.shbank.dto.transaction.TransactionResponse;
@@ -46,39 +47,32 @@ public class TransactionService {
 
         boolean hasDate = start != null && end != null;
 
-        if (type == null) { // 전체 거래
-            if (hasDate) {
-                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_IdAndTransactionDateBetween(
-                        account.getId(), account.getId(), start, end);
-            } else {
-                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_Id(
-                        account.getId(), account.getId());
-            }
-        } else { // 특정 거래 유형 (TRANSFER_IN, TRANSFER_OUT)
-            if (hasDate) {
-                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_IdAndTypeAndTransactionDateBetween(
-                        account.getId(), account.getId(), type, start, end);
-            } else {
-                transactions = transactionRepository.findBySenderAccount_IdOrRecipientAccount_IdAndType(
-                        account.getId(), account.getId(), type);
-            }
+        if (hasDate) {
+            transactions = transactionRepository
+                    .findByAccountIdAndStatusAndTransactionDateBetween(
+                            account.getId(), TransactionStatus.COMPLETED, start, end);
+        } else {
+            transactions = transactionRepository
+                    .findByAccountIdAndStatus(
+                            account.getId(), TransactionStatus.COMPLETED);
         }
 
-        List<TransactionResponse> transactionResponses = transactions.stream()
-                .map(transactionMapper::toResponse)
-                .toList();
-
         int totalIn = transactions.stream()
-                .filter(t -> t.getType() == TransactionType.TRANSFER_IN)
+                .filter(t -> t.getRecipientAccount() != null &&
+                        t.getRecipientAccount().getId().equals(account.getId()))
                 .mapToInt(Transaction::getAmount)
                 .sum();
 
         int totalOut = transactions.stream()
-                .filter(t -> t.getType() == TransactionType.TRANSFER_OUT)
+                .filter(t -> t.getSenderAccount().getId().equals(account.getId()))
                 .mapToInt(Transaction::getAmount)
                 .sum();
 
         int netChange = totalIn - totalOut;
+
+        List<TransactionResponse> transactionResponses = transactions.stream()
+                .map(transactionMapper::toResponse)
+                .toList();
 
         return TransactionHistoryResponse.builder()
                 .totalIn(totalIn)
@@ -111,33 +105,36 @@ public class TransactionService {
 
     // 이체 (즉시/예약 송금) (POST)
     @Transactional
-    public TransactionResponse transfer(Long senderAccountId,
-                                        String recipientAccountNumber,
-                                        Integer amount,
-                                        LocalDateTime scheduleDate, // 예약 송금일, null이면 즉시 송금
-                                        String memo,
-                                        TransactionType type,
-                                        Long userId) {
+    public Object transfer(Long senderAccountId,
+                           String recipientAccountNumber,
+                           Integer amount,
+                           LocalDateTime scheduleDate, // 예약 송금일, null이면 즉시 송금
+                           String memo,
+                           TransactionType type,
+                           Long userId) {
 
         // 계좌 조회 및 검증
-        Account sender = accountRepository.findById(senderAccountId)
+        Account senderAccount = accountRepository.findById(senderAccountId)
                 .orElseThrow(() -> new AccountNotFoundException("송금 계좌가 존재하지 않습니다."));
 
-        if (!sender.getUser().getId().equals(userId)) {
+        if (!senderAccount.getUser().getId().equals(userId)) {
             throw new AccessDeniedException("해당 계좌에 접근할 권한이 없습니다.");
         }
 
-        Account recipient = accountRepository.findByAccountNumber(recipientAccountNumber)
+        Account recipientAccount = accountRepository.findByAccountNumber(recipientAccountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("수취 계좌가 존재하지 않습니다."));
 
         // 잔액 체크
-        if (sender.getBalance() < amount) {
+        if (senderAccount.getBalance() < amount) {
             throw new InsufficientBalanceException("잔액이 부족합니다.");
         }
 
-        // ScheduledTransfer 생성 (예약 송금일이 있는 경우)
+        boolean isScheduled = scheduleDate != null;
+
+        senderAccount.withdraw(amount);
+
         ScheduledTransfer scheduledTransfer = null;
-        if (scheduleDate != null) {
+        if (isScheduled) {
             scheduledTransfer = ScheduledTransfer.builder()
                     .scheduleDate(scheduleDate)
                     .memo(memo)
@@ -146,37 +143,28 @@ public class TransactionService {
 
         // Transaction 생성
         Transaction transaction = Transaction.builder()
-                .senderAccount(sender)
-                .recipientAccount(recipient)
+                .senderAccount(senderAccount)
+                .recipientAccount(recipientAccount)
                 .amount(amount)
-                .balance(sender.getBalance() - amount)
+                .balance(senderAccount.getBalance())
                 .type(type)
-                .status(scheduleDate != null ? TransactionStatus.SCHEDULED : TransactionStatus.COMPLETED)
-                .scheduledTransfer(scheduledTransfer)
+                .status(isScheduled ? TransactionStatus.SCHEDULED : TransactionStatus.COMPLETED)
                 .build();
 
-        if (scheduledTransfer != null) {
-            scheduledTransfer = ScheduledTransfer.builder()
-                    .transaction(transaction)
-                    .scheduleDate(scheduledTransfer.getScheduleDate())
-                    .memo(scheduledTransfer.getMemo())
-                    .build();
-
-            transaction = Transaction.builder()
-                    .senderAccount(transaction.getSenderAccount())
-                    .recipientAccount(transaction.getRecipientAccount())
-                    .amount(transaction.getAmount())
-                    .balance(transaction.getBalance())
-                    .type(transaction.getType())
-                    .status(transaction.getStatus())
-                    .scheduledTransfer(scheduledTransfer)
-                    .build();
+        if (isScheduled) {
+            transaction.linkScheduledTransfer(scheduledTransfer);
+            scheduledTransfer.linkTransaction(transaction);
         }
 
         transactionRepository.save(transaction);
 
-        return transactionMapper.toResponse(transaction);
+        if (isScheduled) {
+            return transactionMapper.toScheduledTransferResponse(transaction.getScheduledTransfer());
+        } else {
+            return transactionMapper.toResponse(transaction);
+        }
     }
+
     // 예약 송금 취소 (PATCH)
     @Transactional
     public void cancelScheduledTransfer(Long transactionId, Long userId) {
@@ -195,9 +183,10 @@ public class TransactionService {
         senderAccount.deposit(transaction.getAmount());
         transaction.cancelScheduled();
     }
+
     // 카드 결제 (POST)
     @Transactional
-    public TransactionResponse cardPayment(Long accountId,
+    public CardPaymentResponse cardPayment(Long accountId,
                                            Integer amount,
                                            String merchantName) {
         Account account = accountRepository.findById(accountId)
@@ -207,26 +196,25 @@ public class TransactionService {
             throw new InsufficientBalanceException("잔액이 부족합니다.");
         }
 
-        Transaction transaction = Transaction.builder()
-                .senderAccount(account)
-                .recipientAccount(null)
-                .amount(amount)
-                .balance(account.getBalance() - amount)
-                .type(TransactionType.TRANSFER_OUT)
-                .status(TransactionStatus.COMPLETED)
-                .build();
+        account.withdraw(amount);
 
         CardPayment cardPayment = CardPayment.builder()
-                .transaction(transaction)
                 .merchantName(merchantName)
+                .build();
+
+        Transaction transaction = Transaction.builder()
+                .senderAccount(account)
+                .amount(amount)
+                .balance(account.getBalance())
+                .type(TransactionType.TRANSFER_OUT)
+                .status(TransactionStatus.COMPLETED)
+                .cardPayment(cardPayment)
                 .build();
 
         transaction.linkCardPayment(cardPayment);
 
-        account.withdraw(amount);
-
         transactionRepository.save(transaction);
 
-        return transactionMapper.toResponse(transaction);
+        return transactionMapper.toCardPaymentResponse(transaction);
     }
 }
