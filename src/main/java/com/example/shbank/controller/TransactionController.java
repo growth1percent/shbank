@@ -1,11 +1,10 @@
 package com.example.shbank.controller;
 
-import com.example.shbank.dto.transaction.ScheduledTransferResponse;
-import com.example.shbank.dto.transaction.TransactionHistoryResponse;
-import com.example.shbank.dto.transaction.TransactionResponse;
+import com.example.shbank.dto.transaction.*;
 import com.example.shbank.enums.TransactionType;
 import com.example.shbank.security.CustomUserDetails;
 import com.example.shbank.service.TransactionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -51,18 +50,22 @@ public class TransactionController {
 
     // 즉시/예약 송금
     @PostMapping("/transfer")
-    public ResponseEntity<TransactionResponse> transfer(
-            @RequestParam Long senderAccountId,
-            @RequestParam String recipientAccountNumber,
-            @RequestParam Integer amount,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime scheduleDate,
-            @RequestParam(required = false) String memo,
-            @RequestParam TransactionType type,
+    public ResponseEntity<Object> transfer(
+            @Valid @RequestBody TransactionRequest request,
             Authentication authentication) {
 
         Long userId = ((CustomUserDetails) authentication.getPrincipal()).getUserId();
 
-        TransactionResponse response = transactionService.transfer(senderAccountId, recipientAccountNumber, amount, scheduleDate, memo, type, userId);
+        Object response = transactionService.transfer(
+                request.getSenderAccountId(),
+                request.getRecipientAccountNumber(),
+                request.getAmount(),
+                request.getScheduleDate(),
+                request.getMemo(),
+                request.getType(),
+                userId
+        );
+
         return ResponseEntity.ok(response);
     }
 
@@ -80,15 +83,18 @@ public class TransactionController {
 
     // 카드 결제
     @PostMapping("/card-payment")
-    public ResponseEntity<TransactionResponse> cardPayment(
-            @RequestParam Long accountId,
-            @RequestParam Integer amount,
-            @RequestParam String merchantName,
+    public ResponseEntity<CardPaymentResponse> cardPayment(
+            @Valid @RequestBody CardPaymentRequest request,
             Authentication authentication) {
 
         Long userId = ((CustomUserDetails) authentication.getPrincipal()).getUserId();
 
-        TransactionResponse response = transactionService.cardPayment(accountId, amount, merchantName);
+        CardPaymentResponse response = transactionService.cardPayment(
+                request.getAccountId(),
+                request.getAmount(),
+                request.getMerchantName()
+        );
+
         return ResponseEntity.ok(response);
     }
 }

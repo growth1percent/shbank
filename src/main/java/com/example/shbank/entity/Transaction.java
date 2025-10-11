@@ -4,6 +4,7 @@ import com.example.shbank.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +24,7 @@ public class Transaction {
     @JoinColumn(name = "sender_account_id", nullable = false)
     private Account senderAccount;
 
-    @ManyToOne(fetch = FetchType.LAZY) // 카드 결제 때는 null 가능
+    @ManyToOne(fetch = FetchType.LAZY) // 카드 결제 때는 null
     @JoinColumn(name = "recipient_account_id")
     private Account recipientAccount;
 
@@ -54,10 +56,14 @@ public class Transaction {
         this.status = TransactionStatus.CANCELED;
     }
 
+    public void linkScheduledTransfer(ScheduledTransfer scheduledTransfer) {
+        this.scheduledTransfer = scheduledTransfer;
+        scheduledTransfer.linkTransaction(this);
+    }
+
     public void linkCardPayment(CardPayment cardPayment) {
-        if (this.cardPayment == null) {
-            this.cardPayment = cardPayment;
-        }
+        this.cardPayment = cardPayment;
+        cardPayment.linkTransaction(this);
     }
 }
 

@@ -34,30 +34,28 @@ CREATE TABLE transactions (
     amount BIGINT NOT NULL,
     balance BIGINT NOT NULL,
     status ENUM('COMPLETED','SCHEDULED','CANCELED') NOT NULL,
-    type ENUM('TRANSFER_IN','TRANSFER_OUT','CARD_PAYMENT') NOT NULL,
+    type ENUM('TRANSFER_IN','TRANSFER_OUT') NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(transaction_id),
     FOREIGN KEY(sender_account_id) REFERENCES accounts(account_id),
     FOREIGN KEY(recipient_account_id) REFERENCES accounts(account_id)
 );
 
--- 예약 송금 테이블 (선택적 1:1, PK = FK)
+-- 예약 송금 테이블
 CREATE TABLE scheduled_transfers (
-    transaction_id BIGINT NOT NULL,
+    scheduled_transfer_id BIGINT NOT NULL AUTO_INCREMENT,
+    transaction_id BIGINT NOT NULL UNIQUE,
     schedule_date DATETIME NOT NULL,
     memo VARCHAR(255) NULL,
-    PRIMARY KEY(transaction_id),
-    CONSTRAINT FK_ScheduledTransfer_Transaction
-        FOREIGN KEY(transaction_id) REFERENCES transactions(transaction_id)
-        ON DELETE CASCADE
+    PRIMARY KEY(scheduled_transfer_id),
+    FOREIGN KEY(transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
 );
 
--- 카드 결제 테이블 (선택적 1:1, PK = FK)
+-- 카드 결제 테이블
 CREATE TABLE card_payments (
-    transaction_id BIGINT NOT NULL,
+    card_payment_id BIGINT NOT NULL AUTO_INCREMENT,
+    transaction_id BIGINT NOT NULL UNIQUE,
     merchant_name VARCHAR(100) NOT NULL,
-    PRIMARY KEY(transaction_id),
-    CONSTRAINT FK_CardPayment_Transaction
-        FOREIGN KEY(transaction_id) REFERENCES transactions(transaction_id)
-        ON DELETE CASCADE
+    PRIMARY KEY(card_payment_id),
+    FOREIGN KEY(transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
 );

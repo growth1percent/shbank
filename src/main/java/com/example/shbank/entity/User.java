@@ -1,6 +1,5 @@
 package com.example.shbank.entity;
 
-
 import com.example.shbank.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
